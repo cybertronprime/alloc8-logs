@@ -297,6 +297,7 @@
         td {
             padding: 1.5rem;
             border-bottom: 1px solid var(--border);
+            vertical-align: top;
         }
 
         tr {
@@ -538,6 +539,115 @@
             margin-bottom: 2rem;
             color: var(--danger);
         }
+        
+        /* Detail Modal */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: auto;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .modal-header h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close-btn:hover {
+            color: var(--primary);
+        }
+        
+        .modal-body {
+            padding: 1rem 0;
+        }
+        
+        .detail-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .detail-value {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            word-break: break-all;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        /* Expandable row */
+        .expand-icon {
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+            transition: transform 0.3s;
+        }
+        
+        .expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+        
+        .row-details {
+            display: none;
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .expanded + .row-details {
+            display: block;
+        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -564,6 +674,11 @@
             .charts-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .modal-content {
+                width: 95%;
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -577,6 +692,19 @@
             <div class="loader-ring"></div>
             <div class="loader-ring"></div>
             <div class="loader-text">LOADING</div>
+        </div>
+    </div>
+    
+    <!-- Detail Modal -->
+    <div class="detail-modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Log Details</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Details will be populated here -->
+            </div>
         </div>
     </div>
 
@@ -669,6 +797,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Timestamp</th>
                             <th>User ID</th>
                             <th>Action</th>
@@ -714,6 +843,11 @@
             document.getElementById('uniqueUsers').textContent = '0';
             document.getElementById('failedOps').textContent = '0';
             document.getElementById('rebalanceOps').textContent = '0';
+            
+            // Setup modal close button
+            document.getElementById('closeModal').addEventListener('click', () => {
+                document.getElementById('detailModal').style.display = 'none';
+            });
         });
 
         // Show initial message
@@ -721,7 +855,7 @@
             const tbody = document.getElementById('logsTableBody');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                         Click "Fetch Logs" button to load data from the API
                     </td>
                 </tr>
@@ -732,6 +866,14 @@
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') searchLogs();
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('detailModal');
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
             });
         }
 
@@ -829,7 +971,7 @@
                 const tbody = document.getElementById('logsTableBody');
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--danger);">
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--danger);">
                             ${errorMessage}
                         </td>
                     </tr>
@@ -885,7 +1027,7 @@
             if (logs.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                             No logs found
                         </td>
                     </tr>
@@ -903,6 +1045,9 @@
                 const statusClass = isSuccess ? 'status-success' : 'status-failed';
                 
                 row.innerHTML = `
+                    <td>
+                        <span class="expand-icon">▶</span>
+                    </td>
                     <td>${formatDate(log.timestamp)}</td>
                     <td>
                         <div class="truncate" title="${log.user_id}">
@@ -929,14 +1074,79 @@
                         </div>
                     </td>
                     <td>
-                        <div  title="${log.comment_tags || 'No details'}">
-                            ${log.comment_tags ? log.comment_tags.substring(0, 50) + '...' : 'No details'}
+                        <div class="truncate" title="${log.comment_tags || 'No details'}" onclick="showDetailModal(${JSON.stringify(log)})">
+                            ${log.comment_tags ? log.comment_tags.substring(0, 100) + (log.comment_tags.length > 100 ? '...' : '') : 'No details'}
                         </div>
                     </td>
                 `;
                 
                 tbody.appendChild(row);
+                
+                // Add expandable row for details
+                const detailsRow = document.createElement('tr');
+                detailsRow.className = 'row-details';
+                detailsRow.innerHTML = `
+                    <td colspan="8">
+                        <div class="detail-value">
+                            ${log.comment_tags || 'No additional details available'}
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(detailsRow);
+                
+                // Add click handler for expand/collapse
+                const expandIcon = row.querySelector('.expand-icon');
+                expandIcon.addEventListener('click', () => {
+                    row.classList.toggle('expanded');
+                    detailsRow.style.display = row.classList.contains('expanded') ? 'table-row' : 'none';
+                });
             });
+        }
+
+        // Show detail modal
+        function showDetailModal(log) {
+            const modal = document.getElementById('detailModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalBody.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">Timestamp</div>
+                    <div class="detail-value">${formatDate(log.timestamp)}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">User ID</div>
+                    <div class="detail-value">${log.user_id || 'N/A'}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Action</div>
+                    <div class="detail-value">${formatAction(log.action)}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value">${!log.comment_tags || !log.comment_tags.toLowerCase().includes('failed') ? 'Success' : 'Failed'}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Orderbook ID</div>
+                    <div class="detail-value">${log.orderbook_id || 'N/A'}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Credit Account</div>
+                    <div class="detail-value">${log.credit_account_address || 'N/A'}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Details</div>
+                    <div class="detail-value">${log.comment_tags || 'No details available'}</div>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
         }
 
         // Render pagination
@@ -1174,7 +1384,7 @@
                 const tbody = document.getElementById('logsTableBody');
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                             No results found for "${searchQuery}"
                         </td>
                     </tr>
@@ -1243,6 +1453,39 @@
         // Format action
         function formatAction(action) {
             return action.replace(/([A-Z])/g, ' $1').trim();
+        }
+        
+        // Generate sample logs for demo
+        function generateSampleLogs() {
+            const actions = ['rebalance', 'collectFees', 'adjustPosition', 'liquidate'];
+            const statuses = ['Success', 'Failed'];
+            const userIDs = ['user123', 'user456', 'user789', 'user101'];
+            const orderbookIDs = ['OB-001', 'OB-002', 'OB-003', 'OB-004'];
+            const creditAccounts = ['0x1234abcd...', '0x5678efgh...', '0x90ijklmn...', '0xopqrstuv...'];
+            
+            const logs = [];
+            for (let i = 0; i < 50; i++) {
+                const action = actions[Math.floor(Math.random() * actions.length)];
+                const isFailed = Math.random() > 0.8;
+                const status = isFailed ? 'Failed' : statuses[Math.floor(Math.random() * statuses.length)];
+                
+                logs.push({
+                    id: i + 1,
+                    timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    user_id: userIDs[Math.floor(Math.random() * userIDs.length)],
+                    action: action,
+                    status: status,
+                    orderbook_id: orderbookIDs[Math.floor(Math.random() * orderbookIDs.length)],
+                    credit_account_address: creditAccounts[Math.floor(Math.random() * creditAccounts.length)],
+                    comment_tags: isFailed ? 
+                        `Burn Failed with Error: InternalRpcError: An internal error occurred. Transaction reverted: execution reverted: "Position is underwater". 
+                        Additional details: User attempted to burn 1.2 ETH but position had insufficient collateral. 
+                        Stack trace: at CreditAccount.burn (contracts/CreditAccount.sol:142) ...` : 
+                        `${action} operation completed successfully`
+                });
+            }
+            
+            return logs;
         }
     </script>
 </body>
