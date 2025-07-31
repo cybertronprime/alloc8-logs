@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>0xxtra Analytics Dashboard</title>
+    <title>Alloc8 Analytics Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -388,6 +388,7 @@
             padding: 0.75rem 1.25rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            color: var(--text-primary);
         }
 
         .page-btn:hover:not(:disabled) {
@@ -527,6 +528,17 @@
             color: var(--text-secondary);
         }
 
+        /* Error Message */
+        #errorMessage {
+            display: none;
+            background: rgba(255, 0, 102, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            color: var(--danger);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .container {
@@ -573,9 +585,6 @@
         <div class="header">
             <h1>0xxtra Analytics</h1>
             <p>Real-time User Activity Dashboard</p>
-            <p style="font-size: 0.9rem; color: var(--warning); margin-top: 1rem;">
-                Note: If you see CORS errors, the API needs to allow cross-origin requests from your domain.
-            </p>
         </div>
 
         <!-- Stats Cards -->
@@ -650,7 +659,7 @@
         </div>
 
         <!-- Error Message -->
-        <div id="errorMessage" style="display: none; background: rgba(255, 0, 102, 0.1); border: 1px solid var(--danger); border-radius: 15px; padding: 1rem; margin-bottom: 2rem; color: var(--danger);">
+        <div id="errorMessage">
             <strong>Error:</strong> <span id="errorText"></span>
         </div>
 
@@ -696,11 +705,8 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Don't auto-fetch on load, wait for user action
             showInitialMessage();
             setupEventListeners();
-            
-            // Initialize empty charts
             updateCharts([]);
             
             // Initialize stats to 0
@@ -772,7 +778,7 @@
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
                     },
-                    mode: 'cors', // Explicitly set CORS mode
+                    mode: 'cors',
                 });
                 
                 if (!response.ok) {
@@ -788,7 +794,12 @@
                 currentPage = page;
                 
                 // Store in global array for search
-                allFetchedData = [...allFetchedData, ...allLogs];
+                if (page === 1) {
+                    allFetchedData = [...allLogs];
+                } else {
+                    allFetchedData = [...allFetchedData, ...allLogs];
+                }
+                
                 // Remove duplicates based on id
                 allFetchedData = Array.from(new Map(allFetchedData.map(item => [item.id, item])).values());
                 
@@ -828,12 +839,312 @@
             }
         }
 
-        // Search logs - now searches across all fetched data
+        // Update statistics
+        function updateStats(logs) {
+            // Total logs - use the global count from API
+            document.getElementById('totalLogs').textContent = totalLogs || logs.length;
+            
+            // Unique users - calculate from current view
+            const uniqueUsers = new Set(logs.map(log => log.user_id)).size;
+            document.getElementById('uniqueUsers').textContent = uniqueUsers;
+            
+            // Failed operations - from current view
+            const failedOps = logs.filter(log => 
+                log.comment_tags && log.comment_tags.toLowerCase().includes('failed')
+            ).length;
+            document.getElementById('failedOps').textContent = failedOps;
+            
+            // Rebalance operations - from current view
+            const rebalanceOps = logs.filter(log => 
+                log.action === 'rebalance'
+            ).length;
+            document.getElementById('rebalanceOps').textContent = rebalanceOps;
+        }
+
+        // Filter logs based on current filter only
+        function filterLogs(logs) {
+            let filtered = logs;
+            
+            // Apply action filter
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'failed') {
+                    filtered = filtered.filter(log => log.comment_tags && log.comment_tags.toLowerCase().includes('failed'));
+                } else {
+                    filtered = filtered.filter(log => log.action === currentFilter);
+                }
+            }
+            
+            return filtered;
+        }
+
+        // Render logs table
+        function renderLogs(logs) {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+            
+            if (logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No logs found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            logs.forEach((log, index) => {
+                const row = document.createElement('tr');
+                row.className = 'log-row';
+                row.style.animationDelay = `${index * 0.05}s`;
+                
+                const isSuccess = !log.comment_tags || !log.comment_tags.toLowerCase().includes('failed');
+                const status = isSuccess ? 'Success' : 'Failed';
+                const statusClass = isSuccess ? 'status-success' : 'status-failed';
+                
+                row.innerHTML = `
+                    <td>${formatDate(log.timestamp)}</td>
+                    <td>
+                        <div class="truncate" title="${log.user_id}">
+                            ${log.user_id}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="action-badge action-${log.action}">
+                            ${formatAction(log.action)}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-indicator ${statusClass}"></span>
+                        ${status}
+                    </td>
+                    <td>
+                        <div class="truncate" title="${log.orderbook_id}">
+                            ${log.orderbook_id}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="truncate" title="${log.credit_account_address}">
+                            ${log.credit_account_address}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="truncate" title="${log.comment_tags || 'No details'}">
+                            ${log.comment_tags ? log.comment_tags.substring(0, 50) + '...' : 'No details'}
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Render pagination
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            
+            // Hide pagination if no data
+            if (totalPages === 0 || allLogs.length === 0) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            pagination.innerHTML = '';
+            
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.textContent = '← Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => fetchLogs(currentPage - 1);
+            pagination.appendChild(prevBtn);
+            
+            // Page numbers
+            const maxPages = Math.min(5, totalPages);
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxPages - 1);
+            
+            if (endPage - startPage < maxPages - 1) {
+                startPage = Math.max(1, endPage - maxPages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => fetchLogs(i);
+                pagination.appendChild(pageBtn);
+            }
+            
+            // Page info
+            const pageInfo = document.createElement('span');
+            pageInfo.style.color = 'var(--text-secondary)';
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            pagination.appendChild(pageInfo);
+            
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.textContent = 'Next →';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => fetchLogs(currentPage + 1);
+            pagination.appendChild(nextBtn);
+        }
+
+        // Update charts
+        function updateCharts(logs) {
+            // Actions distribution chart
+            const actionsCanvas = document.getElementById('actionsChart');
+            const actionsCtx = actionsCanvas.getContext('2d');
+            
+            const actionCounts = logs.reduce((acc, log) => {
+                acc[log.action] = (acc[log.action] || 0) + 1;
+                return acc;
+            }, {});
+            
+            drawPieChart(actionsCtx, actionCounts, actionsCanvas.width, actionsCanvas.height);
+            
+            // Timeline chart
+            const timelineCanvas = document.getElementById('timelineChart');
+            const timelineCtx = timelineCanvas.getContext('2d');
+            
+            const timelineData = getTimelineData(logs);
+            drawLineChart(timelineCtx, timelineData, timelineCanvas.width, timelineCanvas.height);
+        }
+
+        // Draw pie chart
+        function drawPieChart(ctx, data, width, height) {
+            ctx.clearRect(0, 0, width, height);
+            
+            if (Object.keys(data).length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('No data available', width / 2, height / 2);
+                return;
+            }
+            
+            const total = Object.values(data).reduce((a, b) => a + b, 0);
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) / 3;
+            
+            let currentAngle = -Math.PI / 2;
+            const colors = ['#00ff88', '#00ccff', '#ff0066', '#ffaa00'];
+            
+            Object.entries(data).forEach(([action, count], index) => {
+                const sliceAngle = (count / total) * 2 * Math.PI;
+                
+                // Draw slice
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fill();
+                
+                // Draw label
+                const labelAngle = currentAngle + sliceAngle / 2;
+                const labelX = centerX + Math.cos(labelAngle) * (radius + 30);
+                const labelY = centerY + Math.sin(labelAngle) * (radius + 30);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${formatAction(action)} (${count})`, labelX, labelY);
+                
+                currentAngle += sliceAngle;
+            });
+        }
+
+        // Draw line chart
+        function drawLineChart(ctx, data, width, height) {
+            ctx.clearRect(0, 0, width, height);
+            
+            if (data.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('No timeline data available', width / 2, height / 2);
+                return;
+            }
+            
+            const padding = 40;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+            
+            // Find min/max values
+            const maxCount = Math.max(...data.map(d => d.count));
+            
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            // Draw line
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            data.forEach((point, index) => {
+                const x = padding + (index / (data.length - 1)) * chartWidth;
+                const y = height - padding - (point.count / maxCount) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                // Draw point
+                ctx.fillStyle = '#00ff88';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            ctx.stroke();
+            
+            // Draw labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            
+            data.forEach((point, index) => {
+                if (index % Math.ceil(data.length / 5) === 0) {
+                    const x = padding + (index / (data.length - 1)) * chartWidth;
+                    ctx.fillText(point.label, x, height - padding + 20);
+                }
+            });
+        }
+
+        // Get timeline data
+        function getTimelineData(logs) {
+            const hourlyData = {};
+            
+            logs.forEach(log => {
+                const date = new Date(log.timestamp);
+                const hour = date.getHours();
+                const key = `${hour}:00`;
+                
+                hourlyData[key] = (hourlyData[key] || 0) + 1;
+            });
+            
+            return Object.entries(hourlyData)
+                .map(([label, count]) => ({ label, count }))
+                .sort((a, b) => a.label.localeCompare(b.label));
+        }
+
+        // Search logs - searches across all fetched data
         function searchLogs() {
             searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
             
             if (!searchQuery) {
                 renderLogs(filterLogs(allLogs));
+                updateStats(allLogs);
+                updateCharts(allLogs);
                 return;
             }
             
@@ -843,20 +1154,18 @@
                 log.credit_account_address.toLowerCase().includes(searchQuery) ||
                 log.orderbook_id.toLowerCase().includes(searchQuery) ||
                 log.action.toLowerCase().includes(searchQuery) ||
-                log.comment_tags.toLowerCase().includes(searchQuery)
+                (log.comment_tags && log.comment_tags.toLowerCase().includes(searchQuery))
             );
             
             // Apply current filter to search results
             const filtered = currentFilter === 'all' ? searchResults : searchResults.filter(log => {
                 if (currentFilter === 'failed') {
-                    return log.comment_tags.toLowerCase().includes('failed');
+                    return log.comment_tags && log.comment_tags.toLowerCase().includes('failed');
                 }
                 return log.action === currentFilter;
             });
             
             renderLogs(filtered);
-            
-            // Update stats for search results
             updateStats(filtered);
             updateCharts(filtered);
             
@@ -871,6 +1180,69 @@
                     </tr>
                 `;
             }
+        }
+
+        // Reset filters
+        function resetFilters() {
+            searchQuery = '';
+            currentFilter = 'all';
+            document.getElementById('searchInput').value = '';
+            hideError();
+            
+            // Reset filter chips
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            document.querySelector('.chip').classList.add('active');
+            
+            // Show current page data
+            if (allLogs.length > 0) {
+                renderLogs(allLogs);
+                updateStats(allLogs);
+                updateCharts(allLogs);
+            } else {
+                showInitialMessage();
+            }
+        }
+
+        // Set filter
+        function setFilter(filter, element) {
+            currentFilter = filter;
+            
+            // Update UI
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            // If there's a search query, re-run search with new filter
+            if (searchQuery) {
+                searchLogs();
+            } else {
+                // Apply filter to current page logs
+                const filtered = filterLogs(allLogs);
+                renderLogs(filtered);
+                updateStats(filtered);
+                updateCharts(filtered);
+            }
+        }
+
+        // Format date
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const options = {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Format action
+        function formatAction(action) {
+            return action.replace(/([A-Z])/g, ' $1').trim();
         }
     </script>
 </body>
