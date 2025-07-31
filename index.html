@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0xxtra Analytics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00ff88;
+            --secondary: #00ccff;
+            --danger: #ff0066;
+            --warning: #ffaa00;
+            --bg-dark: #0a0a0a;
+            --bg-card: rgba(20, 20, 20, 0.7);
+            --bg-hover: rgba(40, 40, 40, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated background */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(45deg, #0a0a0a 0%, #1a0a2a 50%, #0a1a1a 100%);
+        }
+
+        .background::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            opacity: 0.05;
+            animation: pulse 20s ease-in-out infinite;
+        }
+
+        .background::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
+            opacity: 0.05;
+            animation: pulse 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(180deg); }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -2px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.2);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Search and Filters */
+        .controls {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.5s forwards;
+            opacity: 0;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 1rem 1.5rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(0, 255, 136, 0.05);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 15px;
+            padding: 1rem 2rem;
+            color: var(--bg-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .chip.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--bg-dark);
+            border-color: transparent;
+        }
+
+        .chip:hover:not(.active) {
+            border-color: var(--primary);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        /* Logs Table */
+        .logs-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out 0.7s forwards;
+            opacity: 0;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr {
+            transition: all 0.3s ease;
+        }
+
+        tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .log-row {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Action badges */
+        .action-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .action-rebalance {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--primary);
+        }
+
+        .action-collectFees {
+            background: rgba(0, 204, 255, 0.2);
+            color: var(--secondary);
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-success {
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .status-failed {
+            background: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+        }
+
+        /* Truncate text */
+        .truncate {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .truncate:hover {
+            max-width: none;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem;
+            border-radius: 8px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 3rem;
+            animation: fadeInUp 0.8s ease-out 0.9s forwards;
+            opacity: 0;
+        }
+
+        .page-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--bg-dark);
+            border-color: transparent;
+        }
+
+        /* Loading Animation */
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loader-container.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loader {
+            position: relative;
+            width: 150px;
+            height: 150px;
+        }
+
+        .loader-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: var(--primary);
+            animation: spin 1.5s linear infinite;
+        }
+
+        .loader-ring:nth-child(2) {
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            border-top-color: var(--secondary);
+            animation-duration: 1.2s;
+            animation-direction: reverse;
+        }
+
+        .loader-ring:nth-child(3) {
+            width: 60%;
+            height: 60%;
+            top: 20%;
+            left: 20%;
+            border-top-color: var(--warning);
+            animation-duration: 0.9s;
+        }
+
+        .loader-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Charts Container */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-wrapper {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 1rem 0.5rem;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    
+    <!-- Loading Animation -->
+    <div class="loader-container" id="loader">
+        <div class="loader">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-text">LOADING</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>0xxtra Analytics</h1>
+            <p>Real-time User Activity Dashboard</p>
+            <p style="font-size: 0.9rem; color: var(--warning); margin-top: 1rem;">
+                Note: If you see CORS errors, the API needs to allow cross-origin requests from your domain.
+            </p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, var(--primary), #00ff8850);">
+                    📊
+                </div>
+                <div class="stat-value" id="totalLogs">0</div>
+                <div class="stat-label">Total Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, var(--secondary), #00ccff50);">
+                    👥
+                </div>
+                <div class="stat-value" id="uniqueUsers">0</div>
+                <div class="stat-label">Unique Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, var(--danger), #ff006650);">
+                    ❌
+                </div>
+                <div class="stat-value" id="failedOps">0</div>
+                <div class="stat-label">Failed Operations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, var(--warning), #ffaa0050);">
+                    ⚡
+                </div>
+                <div class="stat-value" id="rebalanceOps">0</div>
+                <div class="stat-label">Rebalance Actions</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3 class="chart-title">Actions Distribution</h3>
+                <canvas id="actionsChart" width="400" height="300"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Activity Timeline</h3>
+                <canvas id="timelineChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="controls">
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="Search by User ID, Credit Account, or Orderbook ID..."
+                >
+                <button class="btn" onclick="searchLogs()">
+                    Search
+                </button>
+                <button class="btn" onclick="fetchLogs(currentPage)" style="background: linear-gradient(135deg, var(--warning), var(--primary));">
+                    Fetch Logs
+                </button>
+                <button class="btn" onclick="resetFilters()" style="background: rgba(255, 255, 255, 0.1);">
+                    Reset
+                </button>
+            </div>
+            <div class="filter-chips">
+                <div class="chip active" onclick="setFilter('all', this)">All Actions</div>
+                <div class="chip" onclick="setFilter('rebalance', this)">Rebalance</div>
+                <div class="chip" onclick="setFilter('collectFees', this)">Collect Fees</div>
+                <div class="chip" onclick="setFilter('failed', this)">Failed Only</div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" style="display: none; background: rgba(255, 0, 102, 0.1); border: 1px solid var(--danger); border-radius: 15px; padding: 1rem; margin-bottom: 2rem; color: var(--danger);">
+            <strong>Error:</strong> <span id="errorText"></span>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="logs-container">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User ID</th>
+                            <th>Action</th>
+                            <th>Status</th>
+                            <th>Orderbook ID</th>
+                            <th>Credit Account</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+            <!-- Dynamic pagination -->
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalLogs = 0;
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let allLogs = [];
+        let allFetchedData = []; // Store all fetched data for global search
+        const baseUrl = 'https://staging.0xxtra.com/staging';
+        const logsPerPage = 50;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Don't auto-fetch on load, wait for user action
+            showInitialMessage();
+            setupEventListeners();
+            
+            // Initialize empty charts
+            updateCharts([]);
+            
+            // Initialize stats to 0
+            document.getElementById('totalLogs').textContent = '0';
+            document.getElementById('uniqueUsers').textContent = '0';
+            document.getElementById('failedOps').textContent = '0';
+            document.getElementById('rebalanceOps').textContent = '0';
+        });
+
+        // Show initial message
+        function showInitialMessage() {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        Click "Fetch Logs" button to load data from the API
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchLogs();
+            });
+        }
+
+        // Show/hide loader
+        function showLoader() {
+            document.getElementById('loader').classList.add('active');
+        }
+
+        function hideLoader() {
+            setTimeout(() => {
+                document.getElementById('loader').classList.remove('active');
+            }, 500);
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Hide error message
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Fetch logs from API
+        async function fetchLogs(page = 1) {
+            showLoader();
+            hideError();
+            
+            try {
+                console.log(`Fetching logs from: ${baseUrl}/usersettings/logs/alluserlogs/${page}/${logsPerPage}`);
+                
+                const response = await fetch(`${baseUrl}/usersettings/logs/alluserlogs/${page}/${logsPerPage}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors', // Explicitly set CORS mode
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Data received:', data);
+                
+                allLogs = data.userLogs || [];
+                totalPages = data.totalPages || 1;
+                totalLogs = data.totalLogs || 0;
+                currentPage = page;
+                
+                // Store in global array for search
+                allFetchedData = [...allFetchedData, ...allLogs];
+                // Remove duplicates based on id
+                allFetchedData = Array.from(new Map(allFetchedData.map(item => [item.id, item])).values());
+                
+                updateStats(allLogs);
+                renderLogs(filterLogs(allLogs));
+                renderPagination();
+                updateCharts(allLogs);
+                
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                
+                let errorMessage = 'Failed to fetch logs. ';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage += 'Network error or CORS issue. Make sure the API allows cross-origin requests.';
+                } else if (error.message.includes('404')) {
+                    errorMessage += 'API endpoint not found. Please check the URL.';
+                } else if (error.message.includes('401') || error.message.includes('403')) {
+                    errorMessage += 'Authentication required. Please check your credentials.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showError(errorMessage);
+                
+                // Show empty state
+                const tbody = document.getElementById('logsTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--danger);">
+                            ${errorMessage}
+                        </td>
+                    </tr>
+                `;
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Search logs - now searches across all fetched data
+        function searchLogs() {
+            searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            
+            if (!searchQuery) {
+                renderLogs(filterLogs(allLogs));
+                return;
+            }
+            
+            // Search across all fetched data
+            const searchResults = allFetchedData.filter(log => 
+                log.user_id.toLowerCase().includes(searchQuery) ||
+                log.credit_account_address.toLowerCase().includes(searchQuery) ||
+                log.orderbook_id.toLowerCase().includes(searchQuery) ||
+                log.action.toLowerCase().includes(searchQuery) ||
+                log.comment_tags.toLowerCase().includes(searchQuery)
+            );
+            
+            // Apply current filter to search results
+            const filtered = currentFilter === 'all' ? searchResults : searchResults.filter(log => {
+                if (currentFilter === 'failed') {
+                    return log.comment_tags.toLowerCase().includes('failed');
+                }
+                return log.action === currentFilter;
+            });
+            
+            renderLogs(filtered);
+            
+            // Update stats for search results
+            updateStats(filtered);
+            updateCharts(filtered);
+            
+            // Show search info
+            if (filtered.length === 0) {
+                const tbody = document.getElementById('logsTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No results found for "${searchQuery}"
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
