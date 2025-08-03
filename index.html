@@ -190,6 +190,7 @@
             gap: 1rem;
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .search-input {
@@ -209,6 +210,43 @@
             border-color: var(--primary);
             background: rgba(0, 255, 136, 0.05);
             box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        /* Date Range Inputs */
+        .date-range-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .date-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .date-input-group label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .date-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(0, 255, 136, 0.05);
         }
 
         .btn {
@@ -302,6 +340,7 @@
 
         tr {
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         tr:hover {
@@ -311,6 +350,16 @@
         .log-row {
             animation: fadeIn 0.5s ease-out forwards;
             opacity: 0;
+        }
+
+        /* Expanded row styles */
+        .log-row.expanded {
+            background: var(--bg-hover);
+            border-left: 3px solid var(--primary);
+        }
+
+        .log-row.expanded td {
+            border-bottom: none;
         }
 
         /* Action badges */
@@ -330,6 +379,16 @@
         .action-collectFees {
             background: rgba(0, 204, 255, 0.2);
             color: var(--secondary);
+        }
+
+        .action-adjustPosition {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .action-liquidate {
+            background: rgba(255, 0, 102, 0.2);
+            color: var(--danger);
         }
 
         /* Status indicator */
@@ -358,17 +417,96 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .truncate:hover {
+        .expanded .truncate {
             max-width: none;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0.5rem;
+            white-space: normal;
+            word-break: break-all;
+        }
+
+        /* Row details */
+        .row-details {
+            display: none;
+            background: rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .row-details td {
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .row-details.show {
+            display: table-row;
+        }
+
+        .detail-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .detail-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .detail-section h4 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .detail-field {
+            margin-bottom: 1rem;
+        }
+
+        .detail-field:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            word-break: break-all;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .detail-value.long-text {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
             border-radius: 8px;
-            position: relative;
-            z-index: 5;
+            margin-top: 0.5rem;
+            white-space: pre-wrap;
+        }
+
+        /* Expand icon */
+        .expand-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 0.5rem;
+            transition: transform 0.3s ease;
+            color: var(--text-secondary);
+        }
+
+        .expanded .expand-icon {
+            transform: rotate(90deg);
+            color: var(--primary);
         }
 
         /* Pagination */
@@ -539,115 +677,6 @@
             margin-bottom: 2rem;
             color: var(--danger);
         }
-        
-        /* Detail Modal */
-        .detail-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            width: 80%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow: auto;
-            padding: 2rem;
-            position: relative;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .modal-header h3 {
-            font-size: 1.5rem;
-            color: var(--primary);
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-        
-        .close-btn:hover {
-            color: var(--primary);
-        }
-        
-        .modal-body {
-            padding: 1rem 0;
-        }
-        
-        .detail-item {
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .detail-label {
-            font-weight: 600;
-            color: var(--secondary);
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .detail-value {
-            background: rgba(0,0,0,0.3);
-            padding: 1rem;
-            border-radius: 10px;
-            word-break: break-all;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        /* Expandable row */
-        .expand-icon {
-            cursor: pointer;
-            font-size: 1.2rem;
-            margin-right: 0.5rem;
-            transition: transform 0.3s;
-        }
-        
-        .expanded .expand-icon {
-            transform: rotate(90deg);
-        }
-        
-        .row-details {
-            display: none;
-            padding: 1rem;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            font-family: monospace;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-        
-        .expanded + .row-details {
-            display: block;
-        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -674,10 +703,19 @@
             .charts-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .modal-content {
-                width: 95%;
-                padding: 1rem;
+
+            .detail-content {
+                grid-template-columns: 1fr;
+            }
+
+            .date-range-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .date-input-group {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
@@ -692,19 +730,6 @@
             <div class="loader-ring"></div>
             <div class="loader-ring"></div>
             <div class="loader-text">LOADING</div>
-        </div>
-    </div>
-    
-    <!-- Detail Modal -->
-    <div class="detail-modal" id="detailModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Log Details</h3>
-                <button class="close-btn" id="closeModal">&times;</button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Details will be populated here -->
-            </div>
         </div>
     </div>
 
@@ -761,6 +786,23 @@
 
         <!-- Search and Filters -->
         <div class="controls">
+            <div class="date-range-container">
+                <div class="date-input-group">
+                    <label for="startDate">From:</label>
+                    <input type="date" id="startDate" class="date-input">
+                </div>
+                <div class="date-input-group">
+                    <label for="endDate">To:</label>
+                    <input type="date" id="endDate" class="date-input">
+                </div>
+                <button class="btn" onclick="applyDateFilter()" style="background: linear-gradient(135deg, var(--warning), var(--secondary));">
+                    Apply Date Filter
+                </button>
+                <button class="btn" onclick="clearDateFilter()" style="background: rgba(255, 255, 255, 0.1);">
+                    Clear Dates
+                </button>
+            </div>
+            
             <div class="search-container">
                 <input 
                     type="text" 
@@ -775,9 +817,10 @@
                     Fetch Logs
                 </button>
                 <button class="btn" onclick="resetFilters()" style="background: rgba(255, 255, 255, 0.1);">
-                    Reset
+                    Reset All
                 </button>
             </div>
+            
             <div class="filter-chips">
                 <div class="chip active" onclick="setFilter('all', this)">All Actions</div>
                 <div class="chip" onclick="setFilter('rebalance', this)">Rebalance</div>
@@ -804,7 +847,6 @@
                             <th>Status</th>
                             <th>Orderbook ID</th>
                             <th>Credit Account</th>
-                            <th>Details</th>
                         </tr>
                     </thead>
                     <tbody id="logsTableBody">
@@ -828,7 +870,9 @@
         let currentFilter = 'all';
         let searchQuery = '';
         let allLogs = [];
-        let allFetchedData = []; // Store all fetched data for global search
+        let allFetchedData = [];
+        let startDate = null;
+        let endDate = null;
         const baseUrl = 'https://staging.0xxtra.com/api';
         const logsPerPage = 50;
 
@@ -837,25 +881,30 @@
             showInitialMessage();
             setupEventListeners();
             updateCharts([]);
+            setDefaultDates();
             
             // Initialize stats to 0
             document.getElementById('totalLogs').textContent = '0';
             document.getElementById('uniqueUsers').textContent = '0';
             document.getElementById('failedOps').textContent = '0';
             document.getElementById('rebalanceOps').textContent = '0';
-            
-            // Setup modal close button
-            document.getElementById('closeModal').addEventListener('click', () => {
-                document.getElementById('detailModal').style.display = 'none';
-            });
         });
+
+        // Set default date range (last 7 days)
+        function setDefaultDates() {
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = weekAgo.toISOString().split('T')[0];
+        }
 
         // Show initial message
         function showInitialMessage() {
             const tbody = document.getElementById('logsTableBody');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                         Click "Fetch Logs" button to load data from the API
                     </td>
                 </tr>
@@ -866,14 +915,6 @@
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') searchLogs();
-            });
-            
-            // Close modal when clicking outside
-            window.addEventListener('click', (event) => {
-                const modal = document.getElementById('detailModal');
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
             });
         }
 
@@ -895,7 +936,6 @@
             errorText.textContent = message;
             errorDiv.style.display = 'block';
             
-            // Auto hide after 5 seconds
             setTimeout(() => {
                 errorDiv.style.display = 'none';
             }, 5000);
@@ -904,6 +944,34 @@
         // Hide error message
         function hideError() {
             document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Apply date filter
+        function applyDateFilter() {
+            const startInput = document.getElementById('startDate').value;
+            const endInput = document.getElementById('endDate').value;
+            
+            if (startInput) startDate = new Date(startInput);
+            if (endInput) {
+                endDate = new Date(endInput);
+                endDate.setHours(23, 59, 59, 999); // Include entire end day
+            }
+            
+            if (startDate && endDate && startDate > endDate) {
+                showError('Start date must be before end date');
+                return;
+            }
+            
+            applyAllFilters();
+        }
+
+        // Clear date filter
+        function clearDateFilter() {
+            startDate = null;
+            endDate = null;
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            applyAllFilters();
         }
 
         // Fetch logs from API
@@ -945,10 +1013,7 @@
                 // Remove duplicates based on id
                 allFetchedData = Array.from(new Map(allFetchedData.map(item => [item.id, item])).values());
                 
-                updateStats(allLogs);
-                renderLogs(filterLogs(allLogs));
-                renderPagination();
-                updateCharts(allLogs);
+                applyAllFilters();
                 
             } catch (error) {
                 console.error('Error fetching logs:', error);
@@ -971,7 +1036,7 @@
                 const tbody = document.getElementById('logsTableBody');
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--danger);">
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--danger);">
                             ${errorMessage}
                         </td>
                     </tr>
@@ -981,31 +1046,30 @@
             }
         }
 
-        // Update statistics
-        function updateStats(logs) {
-            // Total logs - use the global count from API
-            document.getElementById('totalLogs').textContent = totalLogs || logs.length;
+        // Apply all filters (search, action filter, date range)
+        function applyAllFilters() {
+            let filtered = [...allLogs];
             
-            // Unique users - calculate from current view
-            const uniqueUsers = new Set(logs.map(log => log.user_id)).size;
-            document.getElementById('uniqueUsers').textContent = uniqueUsers;
+            // Apply date filter
+            if (startDate || endDate) {
+                filtered = filtered.filter(log => {
+                    const logDate = new Date(log.timestamp);
+                    if (startDate && logDate < startDate) return false;
+                    if (endDate && logDate > endDate) return false;
+                    return true;
+                });
+            }
             
-            // Failed operations - from current view
-            const failedOps = logs.filter(log => 
-                log.comment_tags && log.comment_tags.toLowerCase().includes('failed')
-            ).length;
-            document.getElementById('failedOps').textContent = failedOps;
-            
-            // Rebalance operations - from current view
-            const rebalanceOps = logs.filter(log => 
-                log.action === 'rebalance'
-            ).length;
-            document.getElementById('rebalanceOps').textContent = rebalanceOps;
-        }
-
-        // Filter logs based on current filter only
-        function filterLogs(logs) {
-            let filtered = logs;
+            // Apply search query
+            if (searchQuery) {
+                filtered = filtered.filter(log => 
+                    log.user_id.toLowerCase().includes(searchQuery) ||
+                    log.credit_account_address.toLowerCase().includes(searchQuery) ||
+                    log.orderbook_id.toLowerCase().includes(searchQuery) ||
+                    log.action.toLowerCase().includes(searchQuery) ||
+                    (log.comment_tags && log.comment_tags.toLowerCase().includes(searchQuery))
+                );
+            }
             
             // Apply action filter
             if (currentFilter !== 'all') {
@@ -1016,7 +1080,32 @@
                 }
             }
             
-            return filtered;
+            updateStats(filtered);
+            renderLogs(filtered);
+            renderPagination();
+            updateCharts(filtered);
+        }
+
+        // Update statistics
+        function updateStats(logs) {
+            // Total logs - use filtered count
+            document.getElementById('totalLogs').textContent = logs.length;
+            
+            // Unique users
+            const uniqueUsers = new Set(logs.map(log => log.user_id)).size;
+            document.getElementById('uniqueUsers').textContent = uniqueUsers;
+            
+            // Failed operations
+            const failedOps = logs.filter(log => 
+                log.comment_tags && log.comment_tags.toLowerCase().includes('failed')
+            ).length;
+            document.getElementById('failedOps').textContent = failedOps;
+            
+            // Rebalance operations
+            const rebalanceOps = logs.filter(log => 
+                log.action === 'rebalance'
+            ).length;
+            document.getElementById('rebalanceOps').textContent = rebalanceOps;
         }
 
         // Render logs table
@@ -1027,8 +1116,8 @@
             if (logs.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                            No logs found
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No logs found matching your filters
                         </td>
                     </tr>
                 `;
@@ -1038,12 +1127,13 @@
             logs.forEach((log, index) => {
                 const row = document.createElement('tr');
                 row.className = 'log-row';
-                row.style.animationDelay = `${index * 0.05}s`;
+                row.style.animationDelay = `${Math.min(index * 0.05, 1)}s`;
                 
                 const isSuccess = !log.comment_tags || !log.comment_tags.toLowerCase().includes('failed');
                 const status = isSuccess ? 'Success' : 'Failed';
                 const statusClass = isSuccess ? 'status-success' : 'status-failed';
                 
+                // Create main row
                 row.innerHTML = `
                     <td>
                         <span class="expand-icon">▶</span>
@@ -1073,80 +1163,87 @@
                             ${log.credit_account_address}
                         </div>
                     </td>
-                    <td>
-                        <div class="truncate" title="${log.comment_tags || 'No details'}" onclick="showDetailModal(${JSON.stringify(log)})">
-                            ${log.comment_tags ? log.comment_tags.substring(0, 100) + (log.comment_tags.length > 100 ? '...' : '') : 'No details'}
-                        </div>
-                    </td>
                 `;
                 
                 tbody.appendChild(row);
                 
-                // Add expandable row for details
+                // Create details row
                 const detailsRow = document.createElement('tr');
                 detailsRow.className = 'row-details';
                 detailsRow.innerHTML = `
-                    <td colspan="8">
-                        <div class="detail-value">
-                            ${log.comment_tags || 'No additional details available'}
+                    <td colspan="7">
+                        <div class="detail-content">
+                            <div class="detail-section">
+                                <h4>Basic Information</h4>
+                                <div class="detail-field">
+                                    <div class="detail-label">Log ID</div>
+                                    <div class="detail-value">${log.id || 'N/A'}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Timestamp</div>
+                                    <div class="detail-value">${new Date(log.timestamp).toLocaleString()}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">User ID</div>
+                                    <div class="detail-value">${log.user_id}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Action</div>
+                                    <div class="detail-value">${formatAction(log.action)}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Status</div>
+                                    <div class="detail-value">${status}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>Account Details</h4>
+                                <div class="detail-field">
+                                    <div class="detail-label">Orderbook ID</div>
+                                    <div class="detail-value">${log.orderbook_id}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Credit Account Address</div>
+                                    <div class="detail-value">${log.credit_account_address}</div>
+                                </div>
+                            </div>
+                            
+                            ${log.comment_tags ? `
+                                <div class="detail-section" style="grid-column: 1 / -1;">
+                                    <h4>Additional Details</h4>
+                                    <div class="detail-field">
+                                        <div class="detail-label">Comment Tags</div>
+                                        <div class="detail-value long-text">${log.comment_tags}</div>
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                     </td>
                 `;
                 
                 tbody.appendChild(detailsRow);
                 
-                // Add click handler for expand/collapse
-                const expandIcon = row.querySelector('.expand-icon');
-                expandIcon.addEventListener('click', () => {
-                    row.classList.toggle('expanded');
-                    detailsRow.style.display = row.classList.contains('expanded') ? 'table-row' : 'none';
+                // Add click handler for entire row
+                row.addEventListener('click', (e) => {
+                    // Toggle expanded state
+                    const wasExpanded = row.classList.contains('expanded');
+                    
+                    // Close all other expanded rows
+                    document.querySelectorAll('.log-row.expanded').forEach(r => {
+                        r.classList.remove('expanded');
+                    });
+                    document.querySelectorAll('.row-details.show').forEach(r => {
+                        r.classList.remove('show');
+                    });
+                    
+                    // Toggle current row
+                    if (!wasExpanded) {
+                        row.classList.add('expanded');
+                        detailsRow.classList.add('show');
+                    }
                 });
             });
-        }
-
-        // Show detail modal
-        function showDetailModal(log) {
-            const modal = document.getElementById('detailModal');
-            const modalBody = document.getElementById('modalBody');
-            
-            modalBody.innerHTML = `
-                <div class="detail-item">
-                    <div class="detail-label">Timestamp</div>
-                    <div class="detail-value">${formatDate(log.timestamp)}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">User ID</div>
-                    <div class="detail-value">${log.user_id || 'N/A'}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">Action</div>
-                    <div class="detail-value">${formatAction(log.action)}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">Status</div>
-                    <div class="detail-value">${!log.comment_tags || !log.comment_tags.toLowerCase().includes('failed') ? 'Success' : 'Failed'}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">Orderbook ID</div>
-                    <div class="detail-value">${log.orderbook_id || 'N/A'}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">Credit Account</div>
-                    <div class="detail-value">${log.credit_account_address || 'N/A'}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">Details</div>
-                    <div class="detail-value">${log.comment_tags || 'No details available'}</div>
-                </div>
-            `;
-            
-            modal.style.display = 'flex';
         }
 
         // Render pagination
@@ -1240,7 +1337,7 @@
             const radius = Math.min(width, height) / 3;
             
             let currentAngle = -Math.PI / 2;
-            const colors = ['#00ff88', '#00ccff', '#ff0066', '#ffaa00'];
+            const colors = ['#00ff88', '#00ccff', '#ff0066', '#ffaa00', '#ff00ff', '#00ffff'];
             
             Object.entries(data).forEach(([action, count], index) => {
                 const sliceAngle = (count / total) * 2 * Math.PI;
@@ -1323,7 +1420,7 @@
             ctx.textAlign = 'center';
             
             data.forEach((point, index) => {
-                if (index % Math.ceil(data.length / 5) === 0) {
+                if (index % Math.ceil(data.length / 5) === 0 || index === data.length - 1) {
                     const x = padding + (index / (data.length - 1)) * chartWidth;
                     ctx.fillText(point.label, x, height - padding + 20);
                 }
@@ -1332,71 +1429,39 @@
 
         // Get timeline data
         function getTimelineData(logs) {
-            const hourlyData = {};
+            const dailyData = {};
             
             logs.forEach(log => {
                 const date = new Date(log.timestamp);
-                const hour = date.getHours();
-                const key = `${hour}:00`;
+                const dateKey = date.toISOString().split('T')[0];
                 
-                hourlyData[key] = (hourlyData[key] || 0) + 1;
+                dailyData[dateKey] = (dailyData[dateKey] || 0) + 1;
             });
             
-            return Object.entries(hourlyData)
-                .map(([label, count]) => ({ label, count }))
-                .sort((a, b) => a.label.localeCompare(b.label));
+            return Object.entries(dailyData)
+                .map(([label, count]) => ({ 
+                    label: new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
+                    count 
+                }))
+                .sort((a, b) => new Date(a.label) - new Date(b.label));
         }
 
-        // Search logs - searches across all fetched data
+        // Search logs
         function searchLogs() {
             searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-            
-            if (!searchQuery) {
-                renderLogs(filterLogs(allLogs));
-                updateStats(allLogs);
-                updateCharts(allLogs);
-                return;
-            }
-            
-            // Search across all fetched data
-            const searchResults = allFetchedData.filter(log => 
-                log.user_id.toLowerCase().includes(searchQuery) ||
-                log.credit_account_address.toLowerCase().includes(searchQuery) ||
-                log.orderbook_id.toLowerCase().includes(searchQuery) ||
-                log.action.toLowerCase().includes(searchQuery) ||
-                (log.comment_tags && log.comment_tags.toLowerCase().includes(searchQuery))
-            );
-            
-            // Apply current filter to search results
-            const filtered = currentFilter === 'all' ? searchResults : searchResults.filter(log => {
-                if (currentFilter === 'failed') {
-                    return log.comment_tags && log.comment_tags.toLowerCase().includes('failed');
-                }
-                return log.action === currentFilter;
-            });
-            
-            renderLogs(filtered);
-            updateStats(filtered);
-            updateCharts(filtered);
-            
-            // Show search info
-            if (filtered.length === 0) {
-                const tbody = document.getElementById('logsTableBody');
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                            No results found for "${searchQuery}"
-                        </td>
-                    </tr>
-                `;
-            }
+            applyAllFilters();
         }
 
         // Reset filters
         function resetFilters() {
             searchQuery = '';
             currentFilter = 'all';
+            startDate = null;
+            endDate = null;
+            
             document.getElementById('searchInput').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
             hideError();
             
             // Reset filter chips
@@ -1407,9 +1472,7 @@
             
             // Show current page data
             if (allLogs.length > 0) {
-                renderLogs(allLogs);
-                updateStats(allLogs);
-                updateCharts(allLogs);
+                applyAllFilters();
             } else {
                 showInitialMessage();
             }
@@ -1425,67 +1488,36 @@
             });
             element.classList.add('active');
             
-            // If there's a search query, re-run search with new filter
-            if (searchQuery) {
-                searchLogs();
-            } else {
-                // Apply filter to current page logs
-                const filtered = filterLogs(allLogs);
-                renderLogs(filtered);
-                updateStats(filtered);
-                updateCharts(filtered);
-            }
+            applyAllFilters();
         }
 
         // Format date
         function formatDate(timestamp) {
-            const date = new Date(timestamp);
-            const options = {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            };
-            return date.toLocaleDateString('en-US', options);
+            try {
+                const date = new Date(timestamp);
+                if (isNaN(date.getTime())) {
+                    return 'Invalid Date';
+                }
+                
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                };
+                return date.toLocaleDateString('en-US', options);
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return timestamp;
+            }
         }
 
         // Format action
         function formatAction(action) {
-            return action.replace(/([A-Z])/g, ' $1').trim();
-        }
-        
-        // Generate sample logs for demo
-        function generateSampleLogs() {
-            const actions = ['rebalance', 'collectFees', 'adjustPosition', 'liquidate'];
-            const statuses = ['Success', 'Failed'];
-            const userIDs = ['user123', 'user456', 'user789', 'user101'];
-            const orderbookIDs = ['OB-001', 'OB-002', 'OB-003', 'OB-004'];
-            const creditAccounts = ['0x1234abcd...', '0x5678efgh...', '0x90ijklmn...', '0xopqrstuv...'];
-            
-            const logs = [];
-            for (let i = 0; i < 50; i++) {
-                const action = actions[Math.floor(Math.random() * actions.length)];
-                const isFailed = Math.random() > 0.8;
-                const status = isFailed ? 'Failed' : statuses[Math.floor(Math.random() * statuses.length)];
-                
-                logs.push({
-                    id: i + 1,
-                    timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    user_id: userIDs[Math.floor(Math.random() * userIDs.length)],
-                    action: action,
-                    status: status,
-                    orderbook_id: orderbookIDs[Math.floor(Math.random() * orderbookIDs.length)],
-                    credit_account_address: creditAccounts[Math.floor(Math.random() * creditAccounts.length)],
-                    comment_tags: isFailed ? 
-                        `Burn Failed with Error: InternalRpcError: An internal error occurred. Transaction reverted: execution reverted: "Position is underwater". 
-                        Additional details: User attempted to burn 1.2 ETH but position had insufficient collateral. 
-                        Stack trace: at CreditAccount.burn (contracts/CreditAccount.sol:142) ...` : 
-                        `${action} operation completed successfully`
-                });
-            }
-            
-            return logs;
+            if (!action) return 'Unknown';
+            return action.charAt(0).toUpperCase() + action.slice(1).replace(/([A-Z])/g, ' $1').trim();
         }
     </script>
 </body>
