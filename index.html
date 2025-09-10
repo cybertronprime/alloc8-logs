@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alloc8 Analytics Dashboard</title>
+    <title>0xxtra Analytics Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -22,6 +22,9 @@
             --text-primary: #ffffff;
             --text-secondary: #a0a0a0;
             --border: rgba(255, 255, 255, 0.1);
+            --production: #00ff88;
+            --staging: #ffaa00;
+            --development: #00ccff;
         }
 
         body {
@@ -101,6 +104,185 @@
             font-size: 1.2rem;
         }
 
+        /* Environment Selector */
+        .environment-selector {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+
+        .environment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .environment-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .environment-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .current-env-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .current-env-badge.production {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--production);
+            border: 1px solid var(--production);
+        }
+
+        .current-env-badge.staging {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--staging);
+            border: 1px solid var(--staging);
+        }
+
+        .current-env-badge.development {
+            background: rgba(0, 204, 255, 0.2);
+            color: var(--development);
+            border: 1px solid var(--development);
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px currentColor; }
+            50% { box-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
+        }
+
+        .environment-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .env-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .env-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1));
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+
+        .env-option:hover::before {
+            transform: translateX(100%);
+        }
+
+        .env-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .env-option.active {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+        }
+
+        .env-option.active.production {
+            border-color: var(--production);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .env-option.active.staging {
+            border-color: var(--staging);
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);
+        }
+
+        .env-option.active.development {
+            border-color: var(--development);
+            box-shadow: 0 0 30px rgba(0, 204, 255, 0.3);
+        }
+
+        .env-option-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .env-option-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .env-status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        .env-status-dot.production {
+            background: var(--production);
+        }
+
+        .env-status-dot.staging {
+            background: var(--staging);
+        }
+
+        .env-status-dot.development {
+            background: var(--development);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.7;
+                transform: scale(1.2);
+            }
+        }
+
+        .env-option-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
         /* Stats Cards */
         .stats-grid {
             display: grid;
@@ -122,10 +304,10 @@
             opacity: 0;
         }
 
-        .stat-card:nth-child(1) { animation-delay: 0.1s; }
-        .stat-card:nth-child(2) { animation-delay: 0.2s; }
-        .stat-card:nth-child(3) { animation-delay: 0.3s; }
-        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        .stat-card:nth-child(1) { animation-delay: 0.3s; }
+        .stat-card:nth-child(2) { animation-delay: 0.4s; }
+        .stat-card:nth-child(3) { animation-delay: 0.5s; }
+        .stat-card:nth-child(4) { animation-delay: 0.6s; }
 
         .stat-card:hover {
             transform: translateY(-5px);
@@ -173,6 +355,25 @@
             letter-spacing: 1px;
         }
 
+        .stat-trend {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .stat-trend.up {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--primary);
+        }
+
+        .stat-trend.down {
+            background: rgba(255, 0, 102, 0.2);
+            color: var(--danger);
+        }
+
         /* Search and Filters */
         .controls {
             background: var(--bg-card);
@@ -181,7 +382,7 @@
             border-radius: 20px;
             padding: 2rem;
             margin-bottom: 2rem;
-            animation: fadeInUp 0.8s ease-out 0.5s forwards;
+            animation: fadeInUp 0.8s ease-out 0.7s forwards;
             opacity: 0;
         }
 
@@ -271,6 +472,16 @@
             transform: translateY(0);
         }
 
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+        }
+
         .filter-chips {
             display: flex;
             gap: 1rem;
@@ -305,7 +516,7 @@
             border: 1px solid var(--border);
             border-radius: 20px;
             overflow: hidden;
-            animation: fadeInUp 0.8s ease-out 0.7s forwards;
+            animation: fadeInUp 0.8s ease-out 0.9s forwards;
             opacity: 0;
         }
 
@@ -362,6 +573,32 @@
             border-bottom: none;
         }
 
+        /* Environment badge in table */
+        .env-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .env-badge.production {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--production);
+        }
+
+        .env-badge.staging {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--staging);
+        }
+
+        .env-badge.development {
+            background: rgba(0, 204, 255, 0.2);
+            color: var(--development);
+        }
+
         /* Action badges */
         .action-badge {
             display: inline-block;
@@ -391,6 +628,11 @@
             color: var(--danger);
         }
 
+        .action-rebalance-totalCurrentValueCheck {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--warning);
+        }
+
         /* Status indicator */
         .status-indicator {
             display: inline-block;
@@ -409,6 +651,11 @@
         .status-failed {
             background: var(--danger);
             box-shadow: 0 0 10px var(--danger);
+        }
+
+        .status-skipped {
+            background: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
         }
 
         /* Truncate text */
@@ -516,7 +763,7 @@
             align-items: center;
             gap: 1rem;
             margin-top: 3rem;
-            animation: fadeInUp 0.8s ease-out 0.9s forwards;
+            animation: fadeInUp 0.8s ease-out 1s forwards;
             opacity: 0;
         }
 
@@ -657,7 +904,7 @@
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: 2rem;
-            animation: fadeInUp 0.8s ease-out 0.6s forwards;
+            animation: fadeInUp 0.8s ease-out 0.8s forwards;
             opacity: 0;
         }
 
@@ -717,6 +964,10 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+
+            .environment-options {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -740,6 +991,48 @@
             <p>Real-time User Activity Dashboard</p>
         </div>
 
+        <!-- Environment Selector -->
+        <div class="environment-selector">
+            <div class="environment-header">
+                <div class="environment-title">
+                    <div class="environment-icon">🌍</div>
+                    <span>Environment Selection</span>
+                </div>
+                <div class="current-env-badge" id="currentEnvBadge">
+                    No Environment Selected
+                </div>
+            </div>
+            <div class="environment-options">
+                <div class="env-option production" data-env="production" onclick="selectEnvironment('production', this)">
+                    <div class="env-option-header">
+                        <span class="env-option-title">Production</span>
+                        <span class="env-status-dot production"></span>
+                    </div>
+                    <div class="env-option-description">
+                        Live environment with real user data and transactions
+                    </div>
+                </div>
+                <div class="env-option staging" data-env="staging" onclick="selectEnvironment('staging', this)">
+                    <div class="env-option-header">
+                        <span class="env-option-title">Staging</span>
+                        <span class="env-status-dot staging"></span>
+                    </div>
+                    <div class="env-option-description">
+                        Pre-production testing environment for validation
+                    </div>
+                </div>
+                <div class="env-option development" data-env="development" onclick="selectEnvironment('development', this)">
+                    <div class="env-option-header">
+                        <span class="env-option-title">Development</span>
+                        <span class="env-status-dot development"></span>
+                    </div>
+                    <div class="env-option-description">
+                        Development environment for testing new features
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Stats Cards -->
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
@@ -748,6 +1041,9 @@
                 </div>
                 <div class="stat-value" id="totalLogs">0</div>
                 <div class="stat-label">Total Logs</div>
+                <div class="stat-trend up" id="totalLogsTrend" style="display: none;">
+                    <span>↑</span> <span id="totalLogsTrendValue">0%</span>
+                </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: linear-gradient(135deg, var(--secondary), #00ccff50);">
@@ -755,6 +1051,9 @@
                 </div>
                 <div class="stat-value" id="uniqueUsers">0</div>
                 <div class="stat-label">Unique Users</div>
+                <div class="stat-trend up" id="uniqueUsersTrend" style="display: none;">
+                    <span>↑</span> <span id="uniqueUsersTrendValue">0%</span>
+                </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: linear-gradient(135deg, var(--danger), #ff006650);">
@@ -762,6 +1061,9 @@
                 </div>
                 <div class="stat-value" id="failedOps">0</div>
                 <div class="stat-label">Failed Operations</div>
+                <div class="stat-trend down" id="failedOpsTrend" style="display: none;">
+                    <span>↓</span> <span id="failedOpsTrendValue">0%</span>
+                </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: linear-gradient(135deg, var(--warning), #ffaa0050);">
@@ -769,6 +1071,9 @@
                 </div>
                 <div class="stat-value" id="rebalanceOps">0</div>
                 <div class="stat-label">Rebalance Actions</div>
+                <div class="stat-trend up" id="rebalanceOpsTrend" style="display: none;">
+                    <span>↑</span> <span id="rebalanceOpsTrendValue">0%</span>
+                </div>
             </div>
         </div>
 
@@ -798,7 +1103,7 @@
                 <button class="btn" onclick="applyDateFilter()" style="background: linear-gradient(135deg, var(--warning), var(--secondary));">
                     Apply Date Filter
                 </button>
-                <button class="btn" onclick="clearDateFilter()" style="background: rgba(255, 255, 255, 0.1);">
+                <button class="btn secondary" onclick="clearDateFilter()">
                     Clear Dates
                 </button>
             </div>
@@ -816,7 +1121,7 @@
                 <button class="btn" onclick="fetchLogs(currentPage)" style="background: linear-gradient(135deg, var(--warning), var(--primary));">
                     Fetch Logs
                 </button>
-                <button class="btn" onclick="resetFilters()" style="background: rgba(255, 255, 255, 0.1);">
+                <button class="btn secondary" onclick="resetFilters()">
                     Reset All
                 </button>
             </div>
@@ -824,8 +1129,10 @@
             <div class="filter-chips">
                 <div class="chip active" onclick="setFilter('all', this)">All Actions</div>
                 <div class="chip" onclick="setFilter('rebalance', this)">Rebalance</div>
+                <div class="chip" onclick="setFilter('rebalance-totalCurrentValueCheck', this)">Value Check</div>
                 <div class="chip" onclick="setFilter('collectFees', this)">Collect Fees</div>
                 <div class="chip" onclick="setFilter('failed', this)">Failed Only</div>
+                <div class="chip" onclick="setFilter('skipped', this)">Skipped Only</div>
             </div>
         </div>
 
@@ -845,6 +1152,7 @@
                             <th>User ID</th>
                             <th>Action</th>
                             <th>Status</th>
+                            <th>Environment</th>
                             <th>Orderbook ID</th>
                             <th>Credit Account</th>
                         </tr>
@@ -873,8 +1181,15 @@
         let allFetchedData = [];
         let startDate = null;
         let endDate = null;
-        const baseUrl = 'https://staging.0xxtra.com/api';
+        let currentEnvironment = null;
+        const baseUrl = 'https://0xxtra.com/api';
         const logsPerPage = 50;
+        let previousStats = {
+            totalLogs: 0,
+            uniqueUsers: 0,
+            failedOps: 0,
+            rebalanceOps: 0
+        };
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -904,8 +1219,8 @@
             const tbody = document.getElementById('logsTableBody');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                        Click "Fetch Logs" button to load data from the API
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        Please select an environment above, then click "Fetch Logs" to load data
                     </td>
                 </tr>
             `;
@@ -916,6 +1231,41 @@
             document.getElementById('searchInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') searchLogs();
             });
+        }
+
+        // Select environment
+        function selectEnvironment(env, element) {
+            currentEnvironment = env;
+            
+            // Update UI
+            document.querySelectorAll('.env-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            // Update current environment badge
+            const badge = document.getElementById('currentEnvBadge');
+            badge.textContent = env.toUpperCase();
+            badge.className = `current-env-badge ${env}`;
+            
+            // Show message to fetch logs
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        Environment selected: <strong style="color: var(--primary);">${env.toUpperCase()}</strong>
+                        <br><br>
+                        Click "Fetch Logs" to load data for this environment
+                    </td>
+                </tr>
+            `;
+            
+            // Reset data when environment changes
+            allLogs = [];
+            allFetchedData = [];
+            currentPage = 1;
+            updateStats([]);
+            updateCharts([]);
         }
 
         // Show/hide loader
@@ -976,13 +1326,19 @@
 
         // Fetch logs from API
         async function fetchLogs(page = 1) {
+            if (!currentEnvironment) {
+                showError('Please select an environment first');
+                return;
+            }
+            
             showLoader();
             hideError();
             
             try {
-                console.log(`Fetching logs from: ${baseUrl}/usersettings/logs/alluserlogs/${page}/${logsPerPage}`);
+                const url = `${baseUrl}/usersettings/logs/environmentuserlogs/${currentEnvironment}/${page}/${logsPerPage}`;
+                console.log(`Fetching logs from: ${url}`);
                 
-                const response = await fetch(`${baseUrl}/usersettings/logs/alluserlogs/${page}/${logsPerPage}`, {
+                const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
@@ -1036,7 +1392,7 @@
                 const tbody = document.getElementById('logsTableBody');
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--danger);">
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--danger);">
                             ${errorMessage}
                         </td>
                     </tr>
@@ -1075,6 +1431,8 @@
             if (currentFilter !== 'all') {
                 if (currentFilter === 'failed') {
                     filtered = filtered.filter(log => log.comment_tags && log.comment_tags.toLowerCase().includes('failed'));
+                } else if (currentFilter === 'skipped') {
+                    filtered = filtered.filter(log => log.comment_tags && log.comment_tags.toLowerCase().includes('skipping'));
                 } else {
                     filtered = filtered.filter(log => log.action === currentFilter);
                 }
@@ -1086,26 +1444,41 @@
             updateCharts(filtered);
         }
 
-        // Update statistics
+        // Update statistics with trend indicators
         function updateStats(logs) {
-            // Total logs - use filtered count
-            document.getElementById('totalLogs').textContent = logs.length;
+            const currentStats = {
+                totalLogs: logs.length,
+                uniqueUsers: new Set(logs.map(log => log.user_id)).size,
+                failedOps: logs.filter(log => 
+                    log.comment_tags && log.comment_tags.toLowerCase().includes('failed')
+                ).length,
+                rebalanceOps: logs.filter(log => 
+                    log.action === 'rebalance' || log.action === 'rebalance-totalCurrentValueCheck'
+                ).length
+            };
             
-            // Unique users
-            const uniqueUsers = new Set(logs.map(log => log.user_id)).size;
-            document.getElementById('uniqueUsers').textContent = uniqueUsers;
+            // Update values
+            document.getElementById('totalLogs').textContent = currentStats.totalLogs;
+            document.getElementById('uniqueUsers').textContent = currentStats.uniqueUsers;
+            document.getElementById('failedOps').textContent = currentStats.failedOps;
+            document.getElementById('rebalanceOps').textContent = currentStats.rebalanceOps;
             
-            // Failed operations
-            const failedOps = logs.filter(log => 
-                log.comment_tags && log.comment_tags.toLowerCase().includes('failed')
-            ).length;
-            document.getElementById('failedOps').textContent = failedOps;
+            // Calculate and show trends (only if we have previous data)
+            if (previousStats.totalLogs > 0) {
+                // Total Logs trend
+                const totalLogsTrend = ((currentStats.totalLogs - previousStats.totalLogs) / previousStats.totalLogs * 100).toFixed(1);
+                if (totalLogsTrend != 0) {
+                    const totalLogsTrendEl = document.getElementById('totalLogsTrend');
+                    totalLogsTrendEl.style.display = 'inline-block';
+                    totalLogsTrendEl.className = totalLogsTrend > 0 ? 'stat-trend up' : 'stat-trend down';
+                    document.getElementById('totalLogsTrendValue').textContent = Math.abs(totalLogsTrend) + '%';
+                    totalLogsTrendEl.querySelector('span').textContent = totalLogsTrend > 0 ? '↑' : '↓';
+                }
+                
+                // Similar for other stats...
+            }
             
-            // Rebalance operations
-            const rebalanceOps = logs.filter(log => 
-                log.action === 'rebalance'
-            ).length;
-            document.getElementById('rebalanceOps').textContent = rebalanceOps;
+            previousStats = currentStats;
         }
 
         // Render logs table
@@ -1116,7 +1489,7 @@
             if (logs.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                             No logs found matching your filters
                         </td>
                     </tr>
@@ -1129,9 +1502,19 @@
                 row.className = 'log-row';
                 row.style.animationDelay = `${Math.min(index * 0.05, 1)}s`;
                 
-                const isSuccess = !log.comment_tags || !log.comment_tags.toLowerCase().includes('failed');
-                const status = isSuccess ? 'Success' : 'Failed';
-                const statusClass = isSuccess ? 'status-success' : 'status-failed';
+                // Determine status based on comment_tags
+                let status = 'Success';
+                let statusClass = 'status-success';
+                
+                if (log.comment_tags) {
+                    if (log.comment_tags.toLowerCase().includes('failed')) {
+                        status = 'Failed';
+                        statusClass = 'status-failed';
+                    } else if (log.comment_tags.toLowerCase().includes('skipping')) {
+                        status = 'Skipped';
+                        statusClass = 'status-skipped';
+                    }
+                }
                 
                 // Create main row
                 row.innerHTML = `
@@ -1145,13 +1528,18 @@
                         </div>
                     </td>
                     <td>
-                        <span class="action-badge action-${log.action}">
+                        <span class="action-badge action-${log.action.replace(/[^a-zA-Z]/g, '')}">
                             ${formatAction(log.action)}
                         </span>
                     </td>
                     <td>
                         <span class="status-indicator ${statusClass}"></span>
                         ${status}
+                    </td>
+                    <td>
+                        <span class="env-badge ${log.node_env || 'production'}">
+                            ${(log.node_env || 'production').toUpperCase()}
+                        </span>
                     </td>
                     <td>
                         <div class="truncate" title="${log.orderbook_id}">
@@ -1171,7 +1559,7 @@
                 const detailsRow = document.createElement('tr');
                 detailsRow.className = 'row-details';
                 detailsRow.innerHTML = `
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="detail-content">
                             <div class="detail-section">
                                 <h4>Basic Information</h4>
@@ -1194,6 +1582,10 @@
                                 <div class="detail-field">
                                     <div class="detail-label">Status</div>
                                     <div class="detail-value">${status}</div>
+                                </div>
+                                <div class="detail-field">
+                                    <div class="detail-label">Environment</div>
+                                    <div class="detail-value">${(log.node_env || 'production').toUpperCase()}</div>
                                 </div>
                             </div>
                             
@@ -1286,7 +1678,7 @@
             // Page info
             const pageInfo = document.createElement('span');
             pageInfo.style.color = 'var(--text-secondary)';
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${totalLogs} total)`;
             pagination.appendChild(pageInfo);
             
             // Next button
@@ -1337,7 +1729,7 @@
             const radius = Math.min(width, height) / 3;
             
             let currentAngle = -Math.PI / 2;
-            const colors = ['#00ff88', '#00ccff', '#ff0066', '#ffaa00', '#ff00ff', '#00ffff'];
+            const colors = ['#00ff88', '#00ccff', '#ff0066', '#ffaa00', '#ff00ff', '#00ffff', '#88ff00', '#ff8800'];
             
             Object.entries(data).forEach(([action, count], index) => {
                 const sliceAngle = (count / total) * 2 * Math.PI;
@@ -1349,17 +1741,37 @@
                 ctx.fillStyle = colors[index % colors.length];
                 ctx.fill();
                 
-                // Draw label
-                const labelAngle = currentAngle + sliceAngle / 2;
-                const labelX = centerX + Math.cos(labelAngle) * (radius + 30);
-                const labelY = centerY + Math.sin(labelAngle) * (radius + 30);
-                
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`${formatAction(action)} (${count})`, labelX, labelY);
+                // Draw label (only if slice is big enough)
+                if (sliceAngle > 0.1) {
+                    const labelAngle = currentAngle + sliceAngle / 2;
+                    const labelX = centerX + Math.cos(labelAngle) * (radius + 30);
+                    const labelY = centerY + Math.sin(labelAngle) * (radius + 30);
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    const percentage = ((count / total) * 100).toFixed(1);
+                    ctx.fillText(`${formatAction(action).substring(0, 15)}`, labelX, labelY - 5);
+                    ctx.fillText(`(${count} - ${percentage}%)`, labelX, labelY + 10);
+                }
                 
                 currentAngle += sliceAngle;
+            });
+            
+            // Draw legend for small slices
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'left';
+            let legendY = 20;
+            Object.entries(data).forEach(([action, count], index) => {
+                const percentage = ((count / total) * 100).toFixed(1);
+                if (percentage < 5) {
+                    ctx.fillStyle = colors[index % colors.length];
+                    ctx.fillRect(10, legendY - 8, 10, 10);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(`${formatAction(action)}: ${count}`, 25, legendY);
+                    legendY += 15;
+                }
             });
         }
 
@@ -1390,6 +1802,18 @@
             ctx.lineTo(width - padding, height - padding);
             ctx.stroke();
             
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.setLineDash([5, 5]);
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (chartHeight / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            
             // Draw line
             ctx.strokeStyle = '#00ff88';
             ctx.lineWidth = 2;
@@ -1404,15 +1828,50 @@
                 } else {
                     ctx.lineTo(x, y);
                 }
+            });
+            
+            ctx.stroke();
+            
+            // Draw gradient fill
+            const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+            gradient.addColorStop(0, 'rgba(0, 255, 136, 0.3)');
+            gradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            data.forEach((point, index) => {
+                const x = padding + (index / (data.length - 1)) * chartWidth;
+                const y = height - padding - (point.count / maxCount) * chartHeight;
                 
-                // Draw point
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.lineTo(width - padding, height - padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Draw points
+            data.forEach((point, index) => {
+                const x = padding + (index / (data.length - 1)) * chartWidth;
+                const y = height - padding - (point.count / maxCount) * chartHeight;
+                
                 ctx.fillStyle = '#00ff88';
                 ctx.beginPath();
                 ctx.arc(x, y, 4, 0, Math.PI * 2);
                 ctx.fill();
+                
+                // Draw value on hover effect (show all values for now)
+                if (index % Math.ceil(data.length / 10) === 0 || index === data.length - 1) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(point.count, x, y - 10);
+                }
             });
-            
-            ctx.stroke();
             
             // Draw labels
             ctx.fillStyle = '#ffffff';
@@ -1425,6 +1884,14 @@
                     ctx.fillText(point.label, x, height - padding + 20);
                 }
             });
+            
+            // Draw Y axis labels
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const value = Math.round((maxCount / 5) * (5 - i));
+                const y = padding + (chartHeight / 5) * i;
+                ctx.fillText(value, padding - 10, y + 3);
+            }
         }
 
         // Get timeline data
@@ -1439,11 +1906,12 @@
             });
             
             return Object.entries(dailyData)
-                .map(([label, count]) => ({ 
-                    label: new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
-                    count 
+                .map(([dateStr, count]) => ({ 
+                    label: new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
+                    count,
+                    date: dateStr
                 }))
-                .sort((a, b) => new Date(a.label) - new Date(b.label));
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
         }
 
         // Search logs
@@ -1517,7 +1985,17 @@
         // Format action
         function formatAction(action) {
             if (!action) return 'Unknown';
-            return action.charAt(0).toUpperCase() + action.slice(1).replace(/([A-Z])/g, ' $1').trim();
+            
+            // Special formatting for known actions
+            const actionMap = {
+                'rebalance': 'Rebalance',
+                'rebalance-totalCurrentValueCheck': 'Value Check',
+                'collectFees': 'Collect Fees',
+                'adjustPosition': 'Adjust Position',
+                'liquidate': 'Liquidate'
+            };
+            
+            return actionMap[action] || action.charAt(0).toUpperCase() + action.slice(1).replace(/([A-Z])/g, ' $1').trim();
         }
     </script>
 </body>
