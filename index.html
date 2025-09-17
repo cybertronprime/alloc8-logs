@@ -633,6 +633,11 @@
             color: var(--warning);
         }
 
+        .action-Rangecheck {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--primary);
+        }
+
         /* Status indicator */
         .status-indicator {
             display: inline-block;
@@ -1113,7 +1118,7 @@
                     type="text" 
                     class="search-input" 
                     id="searchInput" 
-                    placeholder="Search by User ID, Credit Account, or Orderbook ID..."
+                    placeholder="Search by User ID, Smart Wallet (Credit Account), Orderbook ID, or Action..."
                 >
                 <button class="btn" onclick="searchLogs()">
                     Search
@@ -1154,7 +1159,7 @@
                             <th>Status</th>
                             <th>Environment</th>
                             <th>Orderbook ID</th>
-                            <th>Credit Account</th>
+                            <th>Smart Wallet (Credit Account)</th>
                         </tr>
                     </thead>
                     <tbody id="logsTableBody">
@@ -1416,23 +1421,36 @@
                 });
             }
             
-            // Apply search query
+            // Apply search query - IMPROVED FOR BETTER RELIABILITY
             if (searchQuery) {
-                filtered = filtered.filter(log => 
-                    log.user_id.toLowerCase().includes(searchQuery) ||
-                    log.credit_account_address.toLowerCase().includes(searchQuery) ||
-                    log.orderbook_id.toLowerCase().includes(searchQuery) ||
-                    log.action.toLowerCase().includes(searchQuery) ||
-                    (log.comment_tags && log.comment_tags.toLowerCase().includes(searchQuery))
-                );
+                const query = searchQuery.trim().toLowerCase();
+                filtered = filtered.filter(log => {
+                    // Helper function to safely check if a field contains the search query
+                    const safeIncludes = (field) => {
+                        if (!field) return false;
+                        return String(field).toLowerCase().includes(query);
+                    };
+                    
+                    return (
+                        safeIncludes(log.user_id) ||
+                        safeIncludes(log.credit_account_address) ||
+                        safeIncludes(log.orderbook_id) ||
+                        safeIncludes(log.action) ||
+                        safeIncludes(log.comment_tags)
+                    );
+                });
             }
             
             // Apply action filter
             if (currentFilter !== 'all') {
                 if (currentFilter === 'failed') {
-                    filtered = filtered.filter(log => log.comment_tags && log.comment_tags.toLowerCase().includes('failed'));
+                    filtered = filtered.filter(log => 
+                        log.comment_tags && String(log.comment_tags).toLowerCase().includes('failed')
+                    );
                 } else if (currentFilter === 'skipped') {
-                    filtered = filtered.filter(log => log.comment_tags && log.comment_tags.toLowerCase().includes('skipping'));
+                    filtered = filtered.filter(log => 
+                        log.comment_tags && String(log.comment_tags).toLowerCase().includes('skipping')
+                    );
                 } else {
                     filtered = filtered.filter(log => log.action === currentFilter);
                 }
@@ -1450,7 +1468,7 @@
                 totalLogs: logs.length,
                 uniqueUsers: new Set(logs.map(log => log.user_id)).size,
                 failedOps: logs.filter(log => 
-                    log.comment_tags && log.comment_tags.toLowerCase().includes('failed')
+                    log.comment_tags && String(log.comment_tags).toLowerCase().includes('failed')
                 ).length,
                 rebalanceOps: logs.filter(log => 
                     log.action === 'rebalance' || log.action === 'rebalance-totalCurrentValueCheck'
@@ -1507,10 +1525,11 @@
                 let statusClass = 'status-success';
                 
                 if (log.comment_tags) {
-                    if (log.comment_tags.toLowerCase().includes('failed')) {
+                    const commentTags = String(log.comment_tags).toLowerCase();
+                    if (commentTags.includes('failed')) {
                         status = 'Failed';
                         statusClass = 'status-failed';
-                    } else if (log.comment_tags.toLowerCase().includes('skipping')) {
+                    } else if (commentTags.includes('skipping')) {
                         status = 'Skipped';
                         statusClass = 'status-skipped';
                     }
@@ -1523,12 +1542,12 @@
                     </td>
                     <td>${formatDate(log.timestamp)}</td>
                     <td>
-                        <div class="truncate" title="${log.user_id}">
-                            ${log.user_id}
+                        <div class="truncate" title="${log.user_id || 'N/A'}">
+                            ${log.user_id || 'N/A'}
                         </div>
                     </td>
                     <td>
-                        <span class="action-badge action-${log.action.replace(/[^a-zA-Z]/g, '')}">
+                        <span class="action-badge action-${(log.action || '').replace(/[^a-zA-Z]/g, '')}">
                             ${formatAction(log.action)}
                         </span>
                     </td>
@@ -1542,13 +1561,13 @@
                         </span>
                     </td>
                     <td>
-                        <div class="truncate" title="${log.orderbook_id}">
-                            ${log.orderbook_id}
+                        <div class="truncate" title="${log.orderbook_id || 'N/A'}">
+                            ${log.orderbook_id || 'N/A'}
                         </div>
                     </td>
                     <td>
-                        <div class="truncate" title="${log.credit_account_address}">
-                            ${log.credit_account_address}
+                        <div class="truncate" title="${log.credit_account_address || 'N/A'}">
+                            ${log.credit_account_address || 'N/A'}
                         </div>
                     </td>
                 `;
@@ -1573,7 +1592,7 @@
                                 </div>
                                 <div class="detail-field">
                                     <div class="detail-label">User ID</div>
-                                    <div class="detail-value">${log.user_id}</div>
+                                    <div class="detail-value">${log.user_id || 'N/A'}</div>
                                 </div>
                                 <div class="detail-field">
                                     <div class="detail-label">Action</div>
@@ -1593,11 +1612,11 @@
                                 <h4>Account Details</h4>
                                 <div class="detail-field">
                                     <div class="detail-label">Orderbook ID</div>
-                                    <div class="detail-value">${log.orderbook_id}</div>
+                                    <div class="detail-value">${log.orderbook_id || 'N/A'}</div>
                                 </div>
                                 <div class="detail-field">
-                                    <div class="detail-label">Credit Account Address</div>
-                                    <div class="detail-value">${log.credit_account_address}</div>
+                                    <div class="detail-label">Smart Wallet (Credit Account Address)</div>
+                                    <div class="detail-value">${log.credit_account_address || 'N/A'}</div>
                                 </div>
                             </div>
                             
@@ -1697,7 +1716,8 @@
             const actionsCtx = actionsCanvas.getContext('2d');
             
             const actionCounts = logs.reduce((acc, log) => {
-                acc[log.action] = (acc[log.action] || 0) + 1;
+                const action = log.action || 'Unknown';
+                acc[action] = (acc[action] || 0) + 1;
                 return acc;
             }, {});
             
@@ -1899,6 +1919,7 @@
             const dailyData = {};
             
             logs.forEach(log => {
+                if (!log.timestamp) return;
                 const date = new Date(log.timestamp);
                 const dateKey = date.toISOString().split('T')[0];
                 
@@ -1916,7 +1937,8 @@
 
         // Search logs
         function searchLogs() {
-            searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            searchQuery = document.getElementById('searchInput').value.trim();
+            console.log('Searching for:', searchQuery); // Debug log
             applyAllFilters();
         }
 
@@ -1962,6 +1984,7 @@
         // Format date
         function formatDate(timestamp) {
             try {
+                if (!timestamp) return 'N/A';
                 const date = new Date(timestamp);
                 if (isNaN(date.getTime())) {
                     return 'Invalid Date';
@@ -1992,7 +2015,8 @@
                 'rebalance-totalCurrentValueCheck': 'Value Check',
                 'collectFees': 'Collect Fees',
                 'adjustPosition': 'Adjust Position',
-                'liquidate': 'Liquidate'
+                'liquidate': 'Liquidate',
+                'Range_check': 'Range Check'
             };
             
             return actionMap[action] || action.charAt(0).toUpperCase() + action.slice(1).replace(/([A-Z])/g, ' $1').trim();
